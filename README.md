@@ -32,10 +32,10 @@ from agents import Agent
 from agentserve import serve
 
 # Initialize your agent
-math_instructor = Agent(name="Assistant", instructions="You are a helpful assistant")
+my_agent = Agent(name="Assistant", instructions="You are a helpful assistant")
 
 # Serve the agent on port 8000
-serve(agent=math_instructor, port=8000)
+serve(agent=my_agent, port=8000)
 ```
 
 ## API Documentation
@@ -77,28 +77,7 @@ This can be used with any OpenAPI-compatible tools or documentation generators.
 
 ## Development
 
-### CI/CD Pipeline
-
-AgentServe uses GitHub Actions for continuous integration and deployment. The pipeline includes:
-
-#### Continuous Integration (`ci.yml`)
-- Runs on every push and pull request
-- Tests the package with pytest
-- Checks code coverage and uploads to Codecov
-- Runs code quality checks:
-  - Black (code formatting)
-  - isort (import sorting)
-  - flake8 (linting)
-  - mypy (type checking)
-
-#### Release Pipeline (`release.yml`)
-- Triggers on version tag pushes (e.g., v1.0.0)
-- Builds the package
-- Publishes to PyPI
-
-#### Documentation Pipeline (`docs.yml`)
-- Builds documentation using MkDocs
-- Deploys to GitHub Pages on main branch
+For information about CI/CD pipelines and GitHub Actions workflows, see [.github/workflows/README.md](.github/workflows/README.md).
 
 ### Development Workflow
 
@@ -127,26 +106,6 @@ AgentServe uses GitHub Actions for continuous integration and deployment. The pi
    git push origin feature/your-feature-name
    ```
 7. Create a Pull Request
-
-### Release Process
-
-1. Update version in `pyproject.toml`
-2. Create and push a new tag:
-   ```bash
-   git tag v1.0.0
-   git push origin v1.0.0
-   ```
-3. The release pipeline will automatically:
-   - Build the package
-   - Run all tests
-   - Publish to PyPI
-
-### Required Secrets
-
-The following secrets need to be set in your GitHub repository:
-
-- `PYPI_API_TOKEN`: Your PyPI API token for package publishing
-- `GITHUB_TOKEN`: Automatically provided by GitHub Actions
 
 ## Contributing
 
