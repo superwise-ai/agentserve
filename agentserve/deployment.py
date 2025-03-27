@@ -2,57 +2,15 @@ from typing import AsyncGenerator
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.openapi.utils import get_openapi
-from pydantic import BaseModel, Field
 import uvicorn
 from agents import Agent, Runner
 from agentserve.logging_config import get_logger
+from agentserve.models import QuestionRequest, HealthResponse, AgentInfoResponse
 
 logger = get_logger(__name__)
 
 
-class QuestionRequest(BaseModel):
-    input: str = Field(
-        ...,
-        description="The input text to send to the agent",
-        example="Can you help me solve this equation: 2x + 5 = 15?"
-    )
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "input": "Can you help me solve this equation: 2x + 5 = 15?"
-            }
-        }
-
-class HealthResponse(BaseModel):
-    """Response model for the health check endpoint."""
-    status: str = Field(
-        ...,
-        description="The current health status of the service",
-        example="healthy"
-    )
-    agent: str = Field(
-        ...,
-        description="The name of the currently deployed agent",
-        example="Assistant"
-    )
-
-
-class AgentInfoResponse(BaseModel):
-    """Response model for the agent information endpoint."""
-    name: str = Field(
-        ...,
-        description="The name of the agent",
-        example="Assistant"
-    )
-    type: str = Field(
-        ...,
-        description="The type/class of the agent",
-        example="Agent"
-    )
-
-
-def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000):
+def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000, run_server: bool = True):
     """
     Create and serve a FastAPI application that wraps the provided agent.
     
@@ -60,6 +18,7 @@ def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000):
         agent: The OpenAI agent to serve
         host: Host to bind the server to
         port: Port to bind the server to
+        run_server: Whether to start the server (True) or just return the app (False)
     """
     logger.info(f"Starting server for agent '{agent.name}' on {host}:{port}")
 
@@ -100,47 +59,30 @@ def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000):
     @app.post(
         "/invoke",
         response_description="The agent's response to the input query",
-        summary="Invoke the agent synchronously",
+        summary="Invoke the agent",
         description="""
-        Send a query to the agent and receive a complete response.
+        Send a query to the agent and receive a response.
         
-        This endpoint processes the input synchronously and returns the complete response.
-        Use this endpoint when you need the full response at once.
+        This endpoint can process the input either synchronously or as a stream.
+        Set stream=true to receive the response as it's being generated.
         """,
         tags=["Agent Operations"]
     )
     async def invoke_agent(request: QuestionRequest):
-        logger.info(f"Received invoke request: {request.input[:50]}...")
+        logger.info(f"Received invoke request: {request.input[:50]}... (stream={request.stream})")
         try:
-            result = await Runner.run(agent, input=request.input)
-            logger.info("Successfully processed invoke request")
-            return result
+            if request.stream:
+                logger.debug("Starting streaming response")
+                return StreamingResponse(
+                    stream_generator(agent, request.input),
+                    media_type="text/event-stream"
+                )
+            else:
+                result = await Runner.run(agent, input=request.input)
+                logger.info("Successfully processed invoke request")
+                return result
         except Exception as e:
             logger.error(f"Error processing invoke request: {str(e)}", exc_info=True)
-            raise HTTPException(status_code=500, detail=str(e))
-
-    @app.post(
-        "/invoke_stream",
-        response_description="A stream of the agent's response",
-        summary="Invoke the agent with streaming response",
-        description="""
-        Send a query to the agent and receive a streaming response.
-        
-        This endpoint processes the input and returns a server-sent events stream.
-        Use this endpoint when you want to receive the response as it's being generated.
-        """,
-        tags=["Agent Operations"]
-    )
-    async def invoke_agent_stream(request: QuestionRequest):
-        logger.info(f"Received stream request: {request.input[:50]}...")
-        try:
-            logger.debug("Starting streaming response")
-            return StreamingResponse(
-                stream_generator(agent, request.input),
-                media_type="text/event-stream"
-            )
-        except Exception as e:
-            logger.error(f"Error processing stream request: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.get(
@@ -199,5 +141,8 @@ def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000):
 
     app.openapi = custom_openapi
 
-    logger.info("Starting uvicorn server")
-    uvicorn.run(app, host=host, port=port)
+    if run_server:
+        logger.info("Starting uvicorn server")
+        uvicorn.run(app, host=host, port=port)
+    else:
+        return app
