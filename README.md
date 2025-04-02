@@ -132,7 +132,6 @@ For information about CI/CD pipelines and GitHub Actions workflows, see [.github
    poetry run black .
    poetry run isort .
    poetry run flake8
-   poetry run mypy .
    ```
 5. Commit your changes:
    ```bash

@@ -34,18 +34,19 @@ def serve(
         title=f"{agent.name} API",
         description=f"""
         API for invoking the {agent.name} OpenAI agent.
-        
-        This API provides endpoints to interact with the agent in both synchronous and streaming modes.
-        
+
+        This API provides endpoints to interact with the agent in both synchronous
+        and streaming modes.
+
         ## Features
         - Synchronous request/response
         - Server-sent events streaming
         - Health check endpoint
         - Agent information endpoint
-        
+
         ## Authentication
         Currently, this API does not require authentication.
-        
+
         ## Rate Limiting
         No rate limiting is implemented at this time.
         """,
@@ -59,7 +60,9 @@ def serve(
         agent: Agent, question: str
     ) -> AsyncGenerator[str, None]:
         """Generate streaming responses from the agent."""
-        logger.debug(f"Starting stream generation for question: {question[:50]}...")
+        logger.debug(
+            f"Starting stream generation for question: {question[:50]}..."
+        )
         result = Runner.run_streamed(agent, input=question)
         async for event in result.stream_events():
             if event.type == "raw_response_event" and hasattr(event.data, "delta"):
@@ -72,7 +75,7 @@ def serve(
         summary="Invoke the agent",
         description="""
         Send a query to the agent and receive a response.
-        
+
         This endpoint can process the input either synchronously or as a stream.
         Set stream=true to receive the response as it's being generated.
         """,
@@ -80,7 +83,8 @@ def serve(
     )
     async def invoke_agent(request: QuestionRequest):
         logger.info(
-            f"Received invoke request: {request.input[:50]}... (stream={request.stream})"
+            f"Received invoke request: {request.input[:50]}... "
+            f"(stream={request.stream})"
         )
         try:
             if request.stream:
