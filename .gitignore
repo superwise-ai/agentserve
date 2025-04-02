@@ -48,3 +48,8 @@ build/
 
 # Local development
 .DS_Store 
+
+# Project specific
+invoke.py
+*copy*.py
+*copy*.* 
