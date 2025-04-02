@@ -52,4 +52,7 @@ build/
 # Project specific
 invoke.py
 *copy*.py
-*copy*.* 
+*copy*.*
+
+# MkDocs documentation
+site/ 

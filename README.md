@@ -9,13 +9,13 @@ AgentServe is a lightweight wrapper that allows you to easily serve OpenAI Agent
 ## Installation
 
 ```bash
-pip install agentserve
+pip install openai-agentserve
 ```
 
 Or with Poetry:
 
 ```bash
-poetry add agentserve
+poetry add openai-agentserve
 ```
 
 ## Requirements
