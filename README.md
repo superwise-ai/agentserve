@@ -38,6 +38,44 @@ my_agent = Agent(name="Assistant", instructions="You are a helpful assistant")
 serve(agent=my_agent, port=8000)
 ```
 
+## Usage Examples
+
+### Invoking the API
+
+The API supports both streaming and non-streaming responses.
+
+#### Streaming Response
+
+```python
+import requests
+
+url = "http://localhost:8000/invoke"
+
+response = requests.post(url, json={
+    "input": "please tell me a about the history of the world",
+    "stream": True
+    }, stream=True)
+for i, line in enumerate(response.iter_lines()):
+    if line:
+        decoded_line = line.decode('utf-8').strip()
+        print(decoded_line)
+```
+
+#### Non-Streaming Response
+
+```python
+import requests
+
+url = "http://localhost:8000/invoke"
+
+response = requests.post(url, json={
+    "input": "please tell me about the history of the world",
+    "stream": False
+})
+result = response.json()
+print(result)
+```
+
 ## API Documentation
 
 AgentServe provides interactive API documentation through two interfaces:
