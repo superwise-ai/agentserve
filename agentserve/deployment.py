@@ -6,6 +6,10 @@ import uvicorn
 from agents import Agent, Runner
 from agentserve.logging_config import get_logger
 from agentserve.models import QuestionRequest, HealthResponse, AgentInfoResponse
+import warnings
+
+# Suppress the Pydantic deprecation warning from FastAPI
+warnings.filterwarnings("ignore", message=".*general_plain_validator_function.*")
 
 logger = get_logger(__name__)
 
