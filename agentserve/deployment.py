@@ -1,12 +1,14 @@
+import warnings
 from typing import AsyncGenerator
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
-from fastapi.openapi.utils import get_openapi
+
 import uvicorn
 from agents import Agent, Runner
+from fastapi import FastAPI, HTTPException
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import StreamingResponse
+
 from agentserve.logging_config import get_logger
-from agentserve.models import QuestionRequest, HealthResponse, AgentInfoResponse
-import warnings
+from agentserve.models import AgentInfoResponse, HealthResponse, QuestionRequest
 
 # Suppress the Pydantic deprecation warning from FastAPI
 warnings.filterwarnings("ignore", message=".*general_plain_validator_function.*")
@@ -14,10 +16,12 @@ warnings.filterwarnings("ignore", message=".*general_plain_validator_function.*"
 logger = get_logger(__name__)
 
 
-def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000, run_server: bool = True):
+def serve(
+    agent: Agent, host: str = "0.0.0.0", port: int = 8000, run_server: bool = True
+):
     """
     Create and serve a FastAPI application that wraps the provided agent.
-    
+
     Args:
         agent: The OpenAI agent to serve
         host: Host to bind the server to
@@ -48,15 +52,17 @@ def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000, run_server: boo
         version="0.1.0",
         docs_url="/docs",
         redoc_url="/redoc",
-        openapi_url="/openapi.json"
+        openapi_url="/openapi.json",
     )
 
-    async def stream_generator(agent: Agent, question: str) -> AsyncGenerator[str, None]:
+    async def stream_generator(
+        agent: Agent, question: str
+    ) -> AsyncGenerator[str, None]:
         """Generate streaming responses from the agent."""
         logger.debug(f"Starting stream generation for question: {question[:50]}...")
         result = Runner.run_streamed(agent, input=question)
         async for event in result.stream_events():
-            if event.type == "raw_response_event" and hasattr(event.data, 'delta'):
+            if event.type == "raw_response_event" and hasattr(event.data, "delta"):
                 yield event.data.delta
         logger.debug("Stream generation completed")
 
@@ -70,16 +76,18 @@ def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000, run_server: boo
         This endpoint can process the input either synchronously or as a stream.
         Set stream=true to receive the response as it's being generated.
         """,
-        tags=["Agent Operations"]
+        tags=["Agent Operations"],
     )
     async def invoke_agent(request: QuestionRequest):
-        logger.info(f"Received invoke request: {request.input[:50]}... (stream={request.stream})")
+        logger.info(
+            f"Received invoke request: {request.input[:50]}... (stream={request.stream})"
+        )
         try:
             if request.stream:
                 logger.debug("Starting streaming response")
                 return StreamingResponse(
                     stream_generator(agent, request.input),
-                    media_type="text/event-stream"
+                    media_type="text/event-stream",
                 )
             else:
                 result = await Runner.run(agent, input=request.input)
@@ -95,7 +103,7 @@ def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000, run_server: boo
         response_description="The health status of the service",
         summary="Check service health",
         description="Returns the current health status of the service and the agent.",
-        tags=["System"]
+        tags=["System"],
     )
     def health_check():
         logger.debug("Health check requested")
@@ -107,14 +115,11 @@ def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000, run_server: boo
         response_description="Information about the agent",
         summary="Get agent information",
         description="Returns basic information about the deployed agent.",
-        tags=["System"]
+        tags=["System"],
     )
     def agent_info():
         logger.debug("Agent info requested")
-        return AgentInfoResponse(
-            name=agent.name,
-            type=type(agent).__name__
-        )
+        return AgentInfoResponse(name=agent.name, type=type(agent).__name__)
 
     # Customize OpenAPI schema
     def custom_openapi():
@@ -132,12 +137,9 @@ def serve(agent: Agent, host: str = "0.0.0.0", port: int = 8000, run_server: boo
         openapi_schema["tags"] = [
             {
                 "name": "Agent Operations",
-                "description": "Endpoints for interacting with the agent"
+                "description": "Endpoints for interacting with the agent",
             },
-            {
-                "name": "System",
-                "description": "System-related endpoints"
-            }
+            {"name": "System", "description": "System-related endpoints"},
         ]
 
         app.openapi_schema = openapi_schema
