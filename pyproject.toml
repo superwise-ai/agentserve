@@ -44,3 +44,26 @@ target-version = ['py311']
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+[tool.semantic_release]
+version_variable = ["agentserve/__init__.py:__version__"]
+version_toml = ["pyproject.toml:tool.poetry.version"]
+branch = "main"
+upload_to_pypi = true
+build_command = "pip install poetry && poetry build"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "fix",
+    "perf",
+    "style",
+    "refactor",
+    "test"
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
