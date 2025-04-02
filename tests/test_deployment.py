@@ -1,11 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
-from fastapi import HTTPException
 from agentserve import serve
 from agents import Agent, Runner
 from unittest.mock import AsyncMock, MagicMock, patch
-from asyncio import TimeoutError
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 # Test Constants
 TEST_AGENT_NAME = "TestAgent"
