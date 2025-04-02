@@ -60,9 +60,7 @@ def serve(
         agent: Agent, question: str
     ) -> AsyncGenerator[str, None]:
         """Generate streaming responses from the agent."""
-        logger.debug(
-            f"Starting stream generation for question: {question[:50]}..."
-        )
+        logger.debug(f"Starting stream generation for question: {question[:50]}...")
         result = Runner.run_streamed(agent, input=question)
         async for event in result.stream_events():
             if event.type == "raw_response_event" and hasattr(event.data, "delta"):
