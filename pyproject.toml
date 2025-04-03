@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "openai-agentserve"
-version = "0.1.0"
+version = "0.0.0"
 description = "A simple tool to deploy OpenAI Agents as FastAPI web services."
 authors = ["Or Itzahary <or.itzary@blattnertech.com>"]
 license = "MIT"
