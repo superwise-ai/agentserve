@@ -1,0 +1,24 @@
+name: Push to Main
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    
+  lint:
+    uses: ./.github/workflows/lint.yml
+    
+  docs:
+    uses: ./.github/workflows/build-docs.yml
+    with:
+      deploy: true
+    
+  release:
+    needs: [test, lint, docs]
+    uses: ./.github/workflows/release.yml
+    secrets:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }} 
