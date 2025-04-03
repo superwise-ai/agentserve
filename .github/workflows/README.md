@@ -12,7 +12,6 @@ This directory contains the GitHub Actions workflows for the project.
   - Black (code formatting)
   - isort (import sorting)
   - flake8 (linting)
-  - mypy (type checking)
 
 ### Release Pipeline (`release.yml`)
 - Triggers on version tag pushes (e.g., v1.0.0)
