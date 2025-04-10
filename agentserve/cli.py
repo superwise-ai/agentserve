@@ -1,11 +1,12 @@
-from pathlib import Path
 import importlib.util
 import sys
-from typing import Any, Optional
+from pathlib import Path
+from typing import Any
 
 import typer
-from rich import print
 from agents import Agent
+from rich import print
+
 from agentserve import serve
 
 
@@ -14,14 +15,14 @@ def load_agent_module(path: str) -> Any:
     path = Path(path)
     if not path.exists():
         raise typer.BadParameter(f"Agent file not found: {path}")
-    
-    if not path.is_file() or path.suffix != '.py':
+
+    if not path.is_file() or path.suffix != ".py":
         raise typer.BadParameter(f"Agent path must be a Python file: {path}")
-    
+
     spec = importlib.util.spec_from_file_location("agent_module", path)
     if not spec or not spec.loader:
         raise typer.BadParameter(f"Could not load agent module: {path}")
-    
+
     module = importlib.util.module_from_spec(spec)
     sys.modules["agent_module"] = module
     spec.loader.exec_module(module)
@@ -37,11 +38,13 @@ def validate_agent(obj: Any) -> Agent:
         )
     return obj
 
+
 app = typer.Typer(
     name="agentserve",
     help="Deploy OpenAI Agents as web services.",
-    add_completion=False
+    add_completion=False,
 )
+
 
 @app.command()
 def api(
@@ -57,40 +60,42 @@ def api(
     ),
     host: str = typer.Option(
         "127.0.0.1",
-        "--host", "-h",
+        "--host",
+        "-h",
         help="Host to bind to",
     ),
     port: int = typer.Option(
         8000,
-        "--port", "-p",
+        "--port",
+        "-p",
         help="Port to bind to",
     ),
 ) -> None:
     """
     Serve an OpenAI agent as a web service.
-    
+
     The agent must be defined and instantiated in the specified Python file.
     """
     try:
         module = load_agent_module(str(agent_path))
-        
+
         if not hasattr(module, agent_name):
-            available_attrs = [
-                attr for attr in dir(module) 
-                if not attr.startswith('_')
-            ]
-            raise typer.BadParameter(
+            available_attrs = [attr for attr in dir(module) if not attr.startswith("_")]
+            attrs_str = ", ".join(available_attrs) or "none"
+            msg = (
                 f"Agent '{agent_name}' not found in {agent_path}. "
-                f"Available non-private attributes: {', '.join(available_attrs) or 'none'}"
+                f"Available non-private attributes: {attrs_str}"
             )
-        
+            raise typer.BadParameter(msg)
+
         agent = validate_agent(getattr(module, agent_name))
-        
+
         print(f"[green]Starting agent server on http://{host}:{port}[/green]")
         serve(agent, host=host, port=port)
-        
+
     except Exception as e:
         raise typer.BadParameter(str(e))
+
 
 @app.callback()
 def callback():
@@ -98,6 +103,7 @@ def callback():
     Deploy OpenAI Agents as web services.
     """
     pass
+
 
 def main() -> None:
     app()
